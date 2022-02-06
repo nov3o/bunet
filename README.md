@@ -23,7 +23,7 @@ command:
     buildnet            Retrieve all hosts from network
     buildnet-share      Retrieve all hosts from network and share this list with others
     share               Share your existing hosts list with others
-    add                 Add nodes arguments
+    add                 Add new nodes via arguments
     clear               Remove boobies list
 ```
 

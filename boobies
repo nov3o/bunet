@@ -97,7 +97,7 @@ buildnet_share_parser.set_defaults(func=buildnet_share, args=[])
 share_parser = subparsers.add_parser('share', help="Share your existing hosts list with others")
 share_parser.set_defaults(func=share, args=[])
 
-add_parser = subparsers.add_parser('add', help="Add nodes arguments")
+add_parser = subparsers.add_parser('add', help="Add new nodes via arguments")
 add_parser.add_argument('args', nargs=argparse.REMAINDER)
 add_parser.set_defaults(func=add)  # nodes to add
 
