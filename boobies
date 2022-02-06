@@ -7,7 +7,7 @@ import argparse
 
 
 PATH = os.environ['HOME'] + "/.config/boobies"
-USER = os.environ['USER']
+USER = os.environ['USER'] + "@localhost"
 
     
 def get(isls=False):
@@ -29,13 +29,10 @@ def get(isls=False):
 def save():
     usersl = get(1)
         
-    newusersl = []
-    for line in sys.stdin:
-        newusersl.append(line.strip())
-        allusers = list(set(usersl + newusersl))
-        
+    newusersl = [i.strip() for i in sys.stdin.readlines()]
+    
     with open(PATH, 'w') as f:
-        f.write('\n'.join(allusers))
+        f.write('\n'.join(set(usersl + newusersl)))
     
 
 def buildnet():
@@ -46,7 +43,7 @@ def buildnet():
     while Q:
         v = Q.pop()
         examined.add(v)
-        nodes = set(os.popen(f"ssh {v}@localhost boobies get").read().split())
+        nodes = set(os.popen(f"ssh {v} boobies get").read().split())
         Q.update(nodes.difference(examined))
 
     with open(PATH, 'w') as f:
@@ -55,35 +52,57 @@ def buildnet():
 
 def share():
     for u in get(1):
-        os.popen(f"cat ~/.config/boobies | ssh {u}@localhost boobies save &")
+        os.popen(f"cat ~/.config/boobies | ssh {u} boobies save &")
         
 
 def buildnet_share():
     buildnet()
     share()
+
+
+def add(*nodes):
+    usersl = get(1)
+        
+    newusersl = [i.strip() for i in nodes]
+    
+    with open(PATH, 'w') as f:
+        f.write('\n'.join(set(usersl + newusersl)))
+
+
+def clear():
+    os.system(f"sudo rm {PATH}")
     
 
 parser = argparse.ArgumentParser()
-subparsers = parser.add_subparsers(title='command',
-                                   description='Action to perform',
-                                   help='Command description')
+subparsers = parser.add_subparsers(
+    title='command',
+    description='Action to perform',
+    help='Command description'
+)
 
 get_parser = subparsers.add_parser('get', help='Get node\'s hosts list')
-get_parser.set_defaults(func=get)
+get_parser.set_defaults(func=get, args=[])
 
 save_parser = subparsers.add_parser('save', help='Add your entered hosts to node\'s list')
-save_parser.set_defaults(func=save)
+save_parser.set_defaults(func=save, args=[])
 
 buildnet_parser = subparsers.add_parser('buildnet', help="Retrieve all hosts from network")
-buildnet_parser.set_defaults(func=buildnet)
+buildnet_parser.set_defaults(func=buildnet, args=[])
 
 buildnet_share_parser = subparsers.add_parser(
     'buildnet-share', help="Retrieve all hosts from network and share this list with others"
 )
-buildnet_share_parser.set_defaults(func=buildnet_share)
+buildnet_share_parser.set_defaults(func=buildnet_share, args=[])
 
 share_parser = subparsers.add_parser('share', help="Share your existing hosts list with others")
-share_parser.set_defaults(func=share)
+share_parser.set_defaults(func=share, args=[])
+
+add_parser = subparsers.add_parser('add', help="Add nodes arguments")
+add_parser.add_argument('args', nargs=argparse.REMAINDER)
+add_parser.set_defaults(func=add)  # nodes to add
+
+clear_parser = subparsers.add_parser('clear', help="Remove boobies list")
+clear_parser.set_defaults(func=clear, args=[])
 
 args = parser.parse_args()
-args.func()
+args.func(*args.args)
