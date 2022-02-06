@@ -2,39 +2,32 @@
 
 import sys
 import os
+import os.path
+import argparse
 
 
 PATH = os.environ['HOME'] + "/.config/boobies"
 USER = os.environ['USER']
 
-# Server methods:
-#  - get
-#  - share
-# Client methods
-#  - buildnet
-#  - buildnet-save
-
-def help():
-    print("Possible commands are:")
-    print("\tget - to retrieve list of known nodes")
-    print("\tsave - to suggest saving of my list")
-    print("\tshare - to share your list with other nodes")
-    print("\tbuildnet - recursive get, i.e. asking all new nodes")
-    print("\tbuildnet-save - recursive get and sharing with all nodes we know")
-
     
-def get(isls=True):
+def get(isls=False):
+    if not os.path.isfile(PATH):
+        if isls:
+            return []
+        print()
+        return
+    
     with open(PATH) as f:
         users = f.read()
         usersl = [i for i in users.split('\n') if i.strip() != '']
 
     if isls:
         return usersl
-    return users
+    print(users)
 
 
 def save():
-    usersl = get()
+    usersl = get(1)
         
     newusersl = []
     for line in sys.stdin:
@@ -46,7 +39,7 @@ def save():
     
 
 def buildnet():
-    Q = set(get())
+    Q = set(get(1))
     
     examined = {USER}
 
@@ -61,37 +54,36 @@ def buildnet():
 
 
 def share():
-    for u in get():
-        os.popen(f"cat ~/.config/boobies | ssh {u}@localhost boobies save")
+    for u in get(1):
+        os.popen(f"cat ~/.config/boobies | ssh {u}@localhost boobies save &")
         
-def buildnet_save():
+
+def buildnet_share():
     buildnet()
     share()
     
 
-if len(sys.argv) == 1:
-    help()
-    exit(0)
-  
-command = sys.argv[1]
+parser = argparse.ArgumentParser()
+subparsers = parser.add_subparsers(title='command',
+                                   description='Action to perform',
+                                   help='Command description')
 
+get_parser = subparsers.add_parser('get', help='Get node\'s hosts list')
+get_parser.set_defaults(func=get)
 
-if command == "get":
-    print(get(0))
-    
-elif command == "save":
-    save()
+save_parser = subparsers.add_parser('save', help='Add your entered hosts to node\'s list')
+save_parser.set_defaults(func=save)
 
-elif command == "buildnet":
-    buildnet()
+buildnet_parser = subparsers.add_parser('buildnet', help="Retrieve all hosts from network")
+buildnet_parser.set_defaults(func=buildnet)
 
-elif command == "share":
-    share()
+buildnet_share_parser = subparsers.add_parser(
+    'buildnet-share', help="Retrieve all hosts from network and share this list with others"
+)
+buildnet_share_parser.set_defaults(func=buildnet_share)
 
-elif command == "buildnet-save":
-    buildnet_save()
+share_parser = subparsers.add_parser('share', help="Share your existing hosts list with others")
+share_parser.set_defaults(func=share)
 
-else:
-    help()
-    
-    
+args = parser.parse_args()
+args.func()
