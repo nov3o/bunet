@@ -25,7 +25,7 @@ command:
     share               Share your existing hosts list with others
     add                 Add nodes arguments
     clear               Remove boobies list
-	```
+```
 
 ### Requirments
 - `python3`
