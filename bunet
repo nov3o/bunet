@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
-import os
+import os, subprocess
 import os.path
 import argparse
 
 
-PATH = os.environ['HOME'] + "/.config/boobies"
+PATH = os.environ['HOME'] + "/.config/bunet"
 USER = os.environ['USER'] + "@localhost"
 
     
@@ -34,6 +34,25 @@ def save():
     with open(PATH, 'w') as f:
         f.write('\n'.join(set(usersl + newusersl)))
     
+# if connection to itself is prohibited, *this* node will be excluded
+def validate(nodeslist):
+    # pop = subprocess.Popen(
+    #         f'ssh bunt@localhost', shell=True
+    #     )
+    # pop.communicate(b'')
+    #final = []
+    #for u in nodeslist:
+    #    pop = subprocess.Popen(
+    #        f'ssh {u}', shell=True
+    #    )
+    #    pop.communicate(b"")
+    #    pop.close() 
+    #    print(u, pop.returncode)
+    #    if not pop.returncode:
+    #        final.append(u)
+
+    return nodeslist
+
 
 def buildnet():
     Q = set(get(1))
@@ -43,8 +62,10 @@ def buildnet():
     while Q:
         v = Q.pop()
         examined.add(v)
-        nodes = set(os.popen(f"ssh {v} boobies get").read().split())
+        nodes = set(os.popen(f"ssh {v} bunet get").read().split())
         Q.update(nodes.difference(examined))
+
+    examined = validate(examined)
 
     with open(PATH, 'w') as f:
         f.write('\n'.join(list(examined)))
@@ -52,7 +73,7 @@ def buildnet():
 
 def share():
     for u in get(1):
-        os.popen(f"cat ~/.config/boobies | ssh {u} boobies save &")
+        os.popen(f"cat ~/.config/bunet | ssh {u} bunet save &")
         
 
 def buildnet_share():
@@ -88,7 +109,6 @@ save_parser.set_defaults(func=save, args=[])
 
 buildnet_parser = subparsers.add_parser('buildnet', help="Retrieve all hosts from network")
 buildnet_parser.set_defaults(func=buildnet, args=[])
-
 buildnet_share_parser = subparsers.add_parser(
     'buildnet-share', help="Retrieve all hosts from network and share this list with others"
 )
@@ -101,8 +121,18 @@ add_parser = subparsers.add_parser('add', help="Add new nodes via arguments")
 add_parser.add_argument('args', nargs=argparse.REMAINDER)
 add_parser.set_defaults(func=add)  # nodes to add
 
-clear_parser = subparsers.add_parser('clear', help="Remove boobies list")
+clear_parser = subparsers.add_parser('clear', help="Remove bunet list")
 clear_parser.set_defaults(func=clear, args=[])
+    
 
-args = parser.parse_args()
-args.func(*args.args)
+def parse(argslist=None):
+    parser.parse_args(argslist)
+    args = parser.parse_args()
+    if 'func' not in dir(args):
+        args.func = parser.print_help
+        args.args = []
+           
+    args.func(*args.args)
+    
+if __name__ == "__main__":
+    parse()

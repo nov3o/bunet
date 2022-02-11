@@ -1,0 +1,12 @@
+1. Add parallelism for buildnet
+2. subprocess.Popen instead of os.popen
+3. Popen(shell=True)&.communicate(data) instead of cat
+4. ssh lib instead of Popen
+5. sockets instead of ssh
+6. rewrite in C++
+7. user password instead of os.popen('sudo
+8. Maybe online monitor(toggling via signals)
+
+Main:
+1. Rewrite in C++
+2. Add parallelism for probbly all network operations
