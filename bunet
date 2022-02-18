@@ -7,7 +7,6 @@ import argparse
 
 
 PATH = os.environ['HOME'] + "/.config/bunet"
-USER = os.environ['USER'] + "@localhost"
 
     
 def get(isls=False):
@@ -57,7 +56,7 @@ def validate(nodeslist):
 def buildnet():
     Q = set(get(1))
     
-    examined = {USER}
+    examined = set()
 
     while Q:
         v = Q.pop()
